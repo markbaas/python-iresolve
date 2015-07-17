@@ -1,0 +1,136 @@
+#!/home/mark/Workspace/virtualenv/general/bin/python
+
+import json
+import os
+import os.path
+import pkgutil
+import re
+import sys
+from collections import defaultdict
+from distutils import dir_util
+
+from pyflakes.api import checkPath
+
+
+class RReporter(object):
+    messages = defaultdict(list)
+
+    def __init__(self):
+        pass
+
+    def unexpectedError(self, *args, **kwargs):
+        pass
+
+    def syntaxError(self, *args, **kwargs):
+        pass
+
+    def flake(self, message):
+        if message.message.startswith('undefined name'):
+            self.messages[message.message_args[0]].append((message.lineno, message.col))
+
+
+def suppress_output(reverse=False):
+    """
+    Suppress output
+    """
+    if reverse:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+    else:
+        sys.stdout = os.devnull
+        sys.stderr = os.devnull
+
+
+def get_unresolved_variables(f):
+    """
+    Gets unresolved vars from file
+    """
+    reporter = RReporter()
+    checkPath(f, reporter=reporter)
+    return dict(reporter.messages)
+
+
+def index_modules():
+    """
+    Indexes objs from all modules
+    """
+    suppress_output()
+    modules = defaultdict(list)
+    for modl, name, ispkg in pkgutil.walk_packages(onerror=lambda x: True):
+        path = os.path.join(modl.path, name.split('.')[-1])
+
+        if os.path.isdir(path):
+            path = os.path.join(path, '__init__')
+        path += '.py'
+
+        objs = []
+
+        if os.path.exists(path):
+            f = open(path)
+            exprs = [r'^def (\w+)', r'^class (\w+)', r'^(\w+) =']
+            data = f.read()
+            objs = [k for r in [re.findall(expr, data, flags=re.MULTILINE)
+                                for expr in exprs] if r for k in r]
+            f.close()
+        else:
+            try:
+                mod = __import__(name)
+                objs = [k for k in dir(mod) if not k.startswith('__')]
+            except:
+                continue
+
+        for obj in objs:
+            if name not in modules[obj]:
+                modules[obj].append(name)
+    suppress_output(True)
+    return dict(modules)
+
+
+def get_suggestions(idx, unresolved):
+    """
+    Returns suggestions
+    """
+    result = {}
+    for u, lines in unresolved.items():
+        paths = idx.get(u)
+        if paths:
+            result[u] = {'paths': paths, 'lineno': lines}
+    return result
+
+
+def output(results, output_format='pretty'):
+    if output_format == 'pretty':
+        for u, meta in results.items():
+            print '* {} can be imported from: {}'.format(u, ', '.join(meta['paths']))
+    elif output_format == 'json':
+        print json.dumps(results)
+
+if __name__ == "__main__":
+
+    import argparse
+
+    default_cache = os.path.join(os.path.expanduser('~'), '.cache/iresolve')
+    ap = argparse.ArgumentParser(description='iresolve - Import Resolver')
+    ap.add_argument('input', metavar='input', help='input')
+    ap.add_argument('--format', choices=['pretty', 'json'], default='pretty', help='Export format')
+    ap.add_argument('--cache', default=default_cache, help='Path to cache location')
+    ap.add_argument('--index', action='store_true', help='(Re)generate module index')
+    parsed = ap.parse_args()
+
+    u = get_unresolved_variables(parsed.input)
+
+    # module cache
+    modidx = os.path.realpath(os.path.join(parsed.cache, 'modules.json'))
+    if parsed.index or not os.path.exists(modidx):
+        idx = index_modules()
+        if not os.path.exists(modidx):
+            dir_util.mkpath(os.path.dirname(modidx))
+        with open(modidx, 'w') as f:
+            f.write(json.dumps(idx))
+    else:
+        with open(modidx) as f:
+            idx = json.loads(f.read())
+
+    results = get_suggestions(idx, u)
+    output(results, parsed.format)
+    sys.exit(1)
