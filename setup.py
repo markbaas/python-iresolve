@@ -9,4 +9,5 @@ setup(name='iresolve',
       author_email='mark.baas123@gmail.com',
       url='https://github.com/markbaas/python-iresolve',
       scripts=['iresolve'],
+      install_requires = ['pyflakes==0.8.1']
      )
