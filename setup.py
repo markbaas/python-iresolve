@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='iresolve',
-      version='0.1',
+      version='0.1.1',
       description='Python Import Resolver',
       author='Mark Baas',
       author_email='mark.baas123@gmail.com',
