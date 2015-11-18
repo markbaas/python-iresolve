@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
+
 import json
 import os
 import os.path
@@ -103,9 +105,9 @@ def get_suggestions(idx, unresolved):
 def output(results, output_format='pretty'):
     if output_format == 'pretty':
         for u, meta in results.items():
-            print '* {} can be imported from: {}'.format(u, ', '.join(meta['paths']))
+            print('* {} can be imported from: {}'.format(u, ', '.join(meta['paths'])))
     elif output_format == 'json':
-        print json.dumps(results)
+        print(json.dumps(results))
 
 if __name__ == "__main__":
 
