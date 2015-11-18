@@ -66,12 +66,14 @@ def index_modules():
         objs = []
 
         if os.path.exists(path):
-            f = open(path)
-            exprs = [r'^def (\w+)', r'^class (\w+)', r'^(\w+) =']
-            data = f.read()
-            objs = [k for r in [re.findall(expr, data, flags=re.MULTILINE)
-                                for expr in exprs] if r for k in r]
-            f.close()
+            try:
+                with open(path) as f:
+                    exprs = [r'^def (\w+)', r'^class (\w+)', r'^(\w+) =']
+                    data = f.read()
+                    objs = [k for r in [re.findall(expr, data, flags=re.MULTILINE)
+                                        for expr in exprs] if r for k in r]
+            except:
+                continue
         else:
             try:
                 mod = __import__(name)
