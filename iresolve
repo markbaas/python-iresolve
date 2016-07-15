@@ -13,6 +13,7 @@ from distutils import dir_util
 
 from pyflakes.api import checkPath
 
+MODULE_BLACKLIST = r'^PyQt5'
 
 class RReporter(object):
     messages = defaultdict(list)
@@ -59,7 +60,11 @@ def index_modules():
     suppress_output()
     modules = defaultdict(list)
     for modl, name, ispkg in pkgutil.walk_packages(onerror=lambda x: True):
-        path = os.path.join(modl.path, name.split('.')[-1])
+        try:
+            path = os.path.join(modl.path, name.split('.')[-1])
+        except AttributeError:
+            # Triggered on zipimport.zipimporter
+            continue
 
         if os.path.isdir(path):
             path = os.path.join(path, '__init__')
@@ -76,12 +81,14 @@ def index_modules():
                                         for expr in exprs] if r for k in r]
             except:
                 continue
-        else:
+        elif not re.search(MODULE_BLACKLIST, name):
             try:
                 mod = __import__(name)
                 objs = [k for k in dir(mod) if not k.startswith('__')]
             except:
                 continue
+        else:
+            continue
 
         for obj in objs:
             if name not in modules[obj]:
