@@ -8,6 +8,8 @@ setup(name='iresolve',
       author='Mark Baas',
       author_email='mark.baas123@gmail.com',
       url='https://github.com/markbaas/python-iresolve',
-      scripts=['iresolve'],
-      install_requires = ['pyflakes>=0.8.1']
-     )
+      entry_points={
+          'console_scripts': ['iresolve=iresolve:main'],
+      },
+      install_requires=['pyflakes>=0.8.1']
+      )

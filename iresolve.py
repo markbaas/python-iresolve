@@ -8,7 +8,6 @@ import os.path
 import pkgutil
 import re
 import sys
-import fnmatch
 
 from collections import defaultdict
 from distutils import dir_util
@@ -16,6 +15,7 @@ from distutils import dir_util
 from pyflakes.api import checkPath
 
 MODULE_BLACKLIST = r'^PyQt5'
+
 
 class RReporter(object):
     messages = defaultdict(list)
@@ -71,6 +71,7 @@ def index_modules(idx=None, path=None):
     suppress_output()
     modules = defaultdict(list)
     pkglist = pkgutil.walk_packages(onerror=lambda x: True)
+    print(pkglist)
     if path:
         pkglist = pkgutil.walk_packages(path, onerror=lambda x: True)
     for modl, name, ispkg in pkglist:
@@ -119,6 +120,7 @@ def merge_dicts(d1, d2):
             d1[v] = d2[v]
     return d1
 
+
 def get_suggestions(idx, unresolved):
     """
     Returns suggestions
@@ -137,6 +139,7 @@ def output(results, output_format='pretty'):
             print('* {} can be imported from: {}'.format(u, ', '.join(meta['paths'])))
     elif output_format == 'json':
         print(json.dumps(results))
+
 
 def get_local_config(parsed):
     dirname = os.path.dirname(parsed.input)
@@ -157,7 +160,8 @@ def get_local_config(parsed):
         dirname = os.path.dirname(dirname)
     return parsed
 
-if __name__ == "__main__":
+
+def main():
     import argparse
 
     default_cache = os.path.join(os.path.expanduser('~'), '.cache/iresolve')
@@ -195,3 +199,6 @@ if __name__ == "__main__":
     results = get_suggestions(idx, u)
     output(results, parsed.format)
     sys.exit(1)
+
+if __name__ == "__main__":
+    main()
