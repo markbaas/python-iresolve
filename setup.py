@@ -8,6 +8,7 @@ setup(name='iresolve',
       author='Mark Baas',
       author_email='mark.baas123@gmail.com',
       url='https://github.com/markbaas/python-iresolve',
+      py_modules=['iresolve'],
       entry_points={
           'console_scripts': ['iresolve=iresolve:main'],
       },
